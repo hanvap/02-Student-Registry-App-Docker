@@ -1,5 +1,5 @@
 pipeline {
- 
+    agent any
 
     stages {
         // Стъпка 1: Checkout на кода от Git хранилище
