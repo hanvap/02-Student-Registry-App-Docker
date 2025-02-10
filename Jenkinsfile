@@ -13,7 +13,7 @@ pipeline {
             steps {  
                 // Настройване на Node.js среда  
                 script {  
-                    def nodeVersion = '14' // Заменете с вашата версия на Node.js  
+                    def nodeVersion = '16' // Заменете с вашата версия на Node.js  
                     env.NODE_VERSION = nodeVersion  
                 }  
                 // Инсталиране на Node.js  
