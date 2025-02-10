@@ -1,60 +1,64 @@
-pipeline {  
-    agent any  
-    
-    stages {  
-        stage('Checkout Code') {  
-            steps {  
-                // Извличане на кода от версията за контрол  
-                git url: 'https://github.com/hanvap/02-Student-Registry-App-Docker', branch: 'main'  
-            }  
-        }  
+pipeline {
+    agent any
 
-        stage('Setup Node.js') {  
-            steps {  
-                // Настройване на Node.js среда  
-                script {  
-                    def nodeVersion = '16' // Заменете с вашата версия на Node.js  
-                    env.NODE_VERSION = nodeVersion  
-                }  
-                // Инсталиране на Node.js  
-                sh 'curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -'  
-                sh 'sudo apt-get install -y nodejs'  
-            }  
-        }  
+    // Ако използвате Jenkins Node.js plugin, задайте инсталацията тук
+    tools {
+        nodejs 'NodeJS' // Името на Node.js инсталацията в Jenkins (конфигурира се в Global Tool Configuration)
+    }
 
-        stage('Install Dependencies') {  
-            steps {  
-                // Инсталиране на зависимостите  
-                sh 'npm install' // Или `yarn install`, в зависимост от вашия пакетен мениджър  
-            }  
-        }  
+    stages {
+        // Стъпка 1: Checkout на кода от Git хранилище
+        stage('Checkout') {
+            steps {
+                git branch: 'main', 
+                url: 'https://github.com/hanvap/02-Student-Registry-App-Docker' // Променете с вашия repository URL
+            }
+        }
 
-        stage('Start Application') {  
-            steps {  
-                // Стартиране на приложението  
-                sh 'npm start &'  
-                // Може да добавите команда за изчакване, ако е необходимо  
-            }  
-        }  
+        // Стъпка 2: Проверка на Node.js версията (незадължително, но полезно за диагностика)
+        stage('Setup Node.js') {
+            steps {
+                sh 'node --version'
+                sh 'npm --version'
+            }
+        }
 
-        stage('Run Tests') {  
-            steps {  
-                // Изпълнение на тестовете  
-                sh 'npm test' // Или друга команда в зависимост от вашата конфигурация  
-            }  
-        }  
-    }  
+        // Стъпка 3: Инсталиране на зависимости
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
 
-    post {  
-        always {  
-            // Действия, които да се изпълняват след всяко стартиране на pipeline  
-            echo 'Pipeline finished.'  
-        }  
-        success {  
-            echo 'Build was successful!'  
-        }  
-        failure {  
-            echo 'Build failed.'  
-        }  
-    }  
+        // Стъпка 4: Стартиране на приложението в background и запазване на PID
+        stage('Start Application') {
+            steps {
+                script {
+                    // Стартиране на приложението в background и запазване на PID
+                    sh 'nohup npm start & echo $! > app.pid'
+                    
+                    // Изчакване за готовност (адаптирайте според вашето приложение)
+                    sleep(time: 10, unit: 'SECONDS') 
+                    // Алтернатива: Проверка с curl за health endpoint
+                    // retry(5) { sh 'curl --fail http://localhost:3000' } 
+                }
+            }
+        }
+
+        // Стъпка 5: Изпълнение на тестовете
+        stage('Run Tests') {
+            steps {
+                sh 'npm test' // Или друга команда за тестове (напр. `npm run test:ci`)
+            }
+            post {
+                always {
+                    script {
+                        // Спиране на приложението след тестове (дори при грешка)
+                        sh 'kill $(cat app.pid) || true' // "|| true" предотвратява грешка ако процесът не съществува
+                        sh 'rm app.pid || true'
+                    }
+                }
+            }
+        }
+    }
 }
