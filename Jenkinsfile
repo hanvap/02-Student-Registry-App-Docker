@@ -1,10 +1,5 @@
 pipeline {
-    agent any
-
-    // Ако използвате Jenkins Node.js plugin, задайте инсталацията тук
-    tools {
-        nodejs 'NodeJS' // Името на Node.js инсталацията в Jenkins (конфигурира се в Global Tool Configuration)
-    }
+ 
 
     stages {
         // Стъпка 1: Checkout на кода от Git хранилище
