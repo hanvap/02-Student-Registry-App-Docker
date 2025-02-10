@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout Code') {  
             steps {  
                 // Извличане на кода от версията за контрол  
-                git url: 'https://github.com/вашият_репозиториум.git', branch: 'main'  
+                git url: 'https://github.com/hanvap/02-Student-Registry-App-Docker', branch: 'main'  
             }  
         }  
 
