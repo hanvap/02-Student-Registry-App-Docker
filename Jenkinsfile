@@ -1,15 +1,15 @@
 pipeline {
     agent any
 
-   
-
     stages {
-        // Автоматичен checkout се извършва от Jenkins (не е нужен ръчен stage)
-
         stage('Setup Node.js') {
             steps {
-                sh 'node --version'
-                sh 'npm --version'
+                script {
+                    def nodeVersion = sh(script: 'node --version', returnStdout: true).trim()
+                    if (!nodeVersion.startsWith('v16.')) {
+                        error("Требуется Node.js v16, текущая версия: ${nodeVersion}")
+                    }
+                }
             }
         }
 
@@ -22,8 +22,8 @@ pipeline {
         stage('Start Application') {
             steps {
                 script {
-                    sh 'nohup npm start & echo $! > app.pid'
-                    sleep(time: 10, unit: 'SECONDS')
+                    sh 'npm start & echo $! > app.pid'
+                    sh 'timeout 60 bash -c "until curl -s http://localhost:3000; do sleep 1; done"'
                 }
             }
         }
@@ -35,11 +35,17 @@ pipeline {
             post {
                 always {
                     script {
-                        sh 'kill $(cat app.pid) || true'
+                        sh 'pkill -f "npm start" || true'
                         sh 'rm app.pid || true'
                     }
                 }
             }
         }
     }
-}
+
+    post {
+        always {
+            archiveArtifacts(artifacts: 'test-results/**/*', allowEmptyArchive: true)
+        }
+    }
+}}
