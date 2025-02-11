@@ -48,4 +48,4 @@ pipeline {
             archiveArtifacts(artifacts: 'test-results/**/*', allowEmptyArchive: true)
         }
     }
-}}
+}
