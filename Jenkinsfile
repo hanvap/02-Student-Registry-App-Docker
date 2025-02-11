@@ -7,7 +7,7 @@ pipeline {
                 script {  
                     // Проверка на версията на Node.js  
                     def nodeVersion = bat(script: 'node --version', returnStdout: true).trim()  
-                    if (!nodeVersion.startsWith('v16.')) {  
+                    if (!nodeVersion.startsWith('v20.')) {  
                         error("Требуется Node.js v16, текущая версия: ${nodeVersion}")  
                     }  
                 }  
